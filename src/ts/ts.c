@@ -639,4 +639,5 @@ void run_ts(matrix_t *R, matrix_t *C, double delta)
 
     matrix_free(A);
     matrix_free(B);
+    matrix_free(Bt);
 }
