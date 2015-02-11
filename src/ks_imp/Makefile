@@ -17,7 +17,7 @@ OBJ= ks.o main.o util.o
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 	
 all: $(OBJ)
-	$(CC) $(CFLAGS) $(LDDIR) $(OBJ) $(UTILS_OBJ) -o ks $(LDFLAGS)
+	$(CC) $(CFLAGS) $(LDDIR) $(OBJ) $(UTILS_OBJ) -o ks+ $(LDFLAGS)
 
 clean:
-	rm $(OBJ) ks
+	rm $(OBJ) ks+
