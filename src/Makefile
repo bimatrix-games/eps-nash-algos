@@ -2,7 +2,7 @@
 all:
 	$(MAKE) -C utils
 	$(MAKE) -C bbm
-	$(MAKE) -C DMP
+	$(MAKE) -C dmp
 	$(MAKE) -C ks
 	$(MAKE) -C ks_imp
 	$(MAKE) -C pure
