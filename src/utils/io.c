@@ -67,7 +67,7 @@ matrix_t **read_bimatrix_from_file(FILE *f, int* rdim1, int* rdim2)
 
     fscanf(f,"%d %d",&dim1,&dim2);
     *rdim1 = dim1; *rdim2 = dim2;
-    matrix_t **bimatrix = create_matrices();
+    matrix_t **bimatrix = create_matrices(dim1, dim2);
     matrix_t *R = bimatrix[0];
     matrix_t *C = bimatrix[1];
     fgetc(f); fgetc(f);
@@ -91,14 +91,14 @@ matrix_t **read_bimatrix_from_file(FILE *f, int* rdim1, int* rdim2)
  * A= R
  * B= C
  */
-matrix_t **read_bimatrix()
+matrix_t **read_bimatrix(int *m, int *n)
 {
     read_conf("m=");
-    scanf("%d", &m);
+    scanf("%d", m);
     read_conf("n=");
-    scanf("%d", &n);
+    scanf("%d", n);
 
-    matrix_t **bimatrix = create_matrices();
+    matrix_t **bimatrix = create_matrices(*m, *n);
 
     read_conf("A=");
     matrix_read(bimatrix[0], stdin);
