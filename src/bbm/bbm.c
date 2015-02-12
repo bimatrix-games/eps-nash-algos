@@ -96,8 +96,6 @@ bbm_sol_t bbm_solve_1(matrix_t *R, matrix_t *C, matrix_t *D)
         matrix_t *delta_b2 = matrix_mul_const(b2, delta);
         sol.y = matrix_add(delta_y, delta_b2);
 
-        matrix_free(lp_sol.x);
-        matrix_free(lp_sol.y);
         matrix_free(delta_y);
         matrix_free(delta_b2);
         matrix_free(b2);
@@ -112,8 +110,6 @@ bbm_sol_t bbm_solve_1(matrix_t *R, matrix_t *C, matrix_t *D)
         matrix_t *delta_r1 = matrix_mul_const(r1, delta);
         sol.x = matrix_add(delta_x, delta_r1);
 
-        matrix_free(lp_sol.x);
-        matrix_free(lp_sol.y);
         matrix_free(delta_x);
         matrix_free(delta_r1);
         matrix_free(r1);
