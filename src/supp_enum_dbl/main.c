@@ -4,17 +4,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <getopt.h>
-#include <pthread.h>
 #include "lis.h"
 #include "checker.h"
+#include "../utils/io.h"
 
 #define MAXSTR 100
 #define TIMEOUT 15*60
-
-struct timespec start, end;
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t done = PTHREAD_COND_INITIALIZER;
-
 
 int is_supp;
 int is_strategy;
@@ -23,42 +18,9 @@ int n;
 int xp, yp;
 int is_pure = 1;
 
-/* Terminate program and print error message from string 'info'  */
-static void not_impl (char *info)
-{
-    fflush(stdout);
-    fprintf(stderr, "Program terminated with error. %s\n", info);
-    exit(1);
-}
-
-/* 
- * Reads a specified pattern 's' from stdin and terminates if the input
- * doesn't match the pattern.
- */
-static void read_conf (const char *s)
-{
-    int i, len = strlen(s);
-    char a[MAXSTR];
-    for (i=0; i<len; i++)
-    {
-        if (scanf("%1s", &a[i])==EOF)
-            /* make sure something is in  a  for error report       */
-            a[i] = '\0';
-        if (a[i] != s[i])
-            /* the chars in  a  from stdin do not match those in s  */
-        {
-            fprintf(stderr, "\"%s\"  required from input, found \"%s\"\n",
-                s, a);
-            not_impl("");
-        }
-    }
-}
-
 /* Allocates memory for the bimatrix */
-static void create_matrices()
+static void create_vectors()
 {
-    R = matrix_alloc(m, n);
-    C = matrix_alloc(m, n);
     x = matrix_alloc(m, 1);
     y = matrix_alloc(n, 1);
     supp_x = matrix_alloc(m, 1);
@@ -66,87 +28,12 @@ static void create_matrices()
 }
 
 /* Frees memory used to store the bimatrix */
-static void free_matrices()
+static void free_vectors()
 {
-    matrix_free(R);
-    matrix_free(C);
     matrix_free(x);
     matrix_free(y);
     matrix_free(supp_x);
     matrix_free(supp_y);
-}
-
-/* 
- * Reads the bimatrix from file using the gambit file format. 
- * Code originally from Codenotti et. al. 2008. 
- */
-static void read_bimatrix_from_file(FILE *f, int* rdim1, int* rdim2) 
-{
-    char *buf = (char *) malloc(100 * sizeof(char));
-    char c;
-    int i, j, tmpn;
-    size_t num_bytes = 100;
-    int dim1, dim2; 
-    double n1, n2;
-
-    /* This checks if we are parsing the correct file type. */
-    getline(&buf,&num_bytes,f);
-    if( strncmp(buf,"NFG 1 D",(size_t)7) != 0 ) {
-        fprintf(stderr,"NFG file corrupted, aborting\n");
-        exit(1);
-    }
-
-    /* First we need to ignore all comments (and player names) from the .nfg file. */
-
-    tmpn = 0;
-    while(tmpn < 2) { /* This is to ignore comments */
-        c = fgetc(f);
-        if( c == '\"' )
-            tmpn++;
-    }
-    tmpn = 0;
-    while(tmpn < 2) { /* And this ignores player names */
-        c = fgetc(f);
-        if( c == '{' || c == '}')
-            tmpn++;
-    }
-
-    fscanf(f,"%d %d",&dim1,&dim2);
-    *rdim1 = dim1; *rdim2 = dim2;
-    create_matrices();
-    fgetc(f); fgetc(f);
-
-    for(i = 0; i < dim2; i++) {
-        for(j = 0; j < dim1; j++) {
-            fscanf(f,"%lf %lf ",&n1,&n2);
-            R->data[j][i] = n1; 
-            C->data[j][i] = n2;
-        }
-    }
-
-    free(buf);
-}
-
-/* 
- * Read bimatrix game (R, C) of size i x j from stdin using the format
- * m= i
- * n= j
- * A= R
- * B= C
- */
-static void read_bimatrix()
-{
-    read_conf("m=");
-    scanf("%d", &m);
-    read_conf("n=");
-    scanf("%d", &n);
-
-    create_matrices();
-
-    read_conf("A=");
-    matrix_read(R, stdin);
-    read_conf("B=");
-    matrix_read(C, stdin);
 }
 
 /* Compute the regret when using strategies x, y */
@@ -344,6 +231,7 @@ int main(int argc, char **argv)
     is_strategy = 1;
     is_supp = 0;
     char *nfg_file = NULL;
+    matrix_t **bimatrix;
 
     while ((c = getopt(argc, argv, "i:ws")) != -1)
         switch (c)
@@ -363,20 +251,19 @@ int main(int argc, char **argv)
         }
 
     if(nfg_file == NULL) {
-        read_bimatrix();
+        bimatrix = read_bimatrix();
+        m = bimatrix[0]->nrows;
+        n = bimatrix[0]->ncols;
     }
     else {
         FILE *f = fopen(nfg_file, "r");
-        read_bimatrix_from_file(f, &m, &n);
+        bimatrix = read_bimatrix_from_file(f, &m, &n);
         fclose(f);
     }
 
-    matrix_t *A = matrix_norm(R);
-    matrix_t *B = matrix_norm(C);
-    matrix_free(R);
-    matrix_free(C);
-    R = A;
-    C = B;
+    create_vectors();
+    R = matrix_norm(bimatrix[0]);
+    C = matrix_norm(bimatrix[1]);
 
     int is_nash = supp_enum();
 
@@ -387,7 +274,8 @@ int main(int argc, char **argv)
     else
         printf("No Nash Found\n");
     
-    free_matrices();
+    free_vectors();
+    free_matrices(bimatrix);
 
     return err;
 }

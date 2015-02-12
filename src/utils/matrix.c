@@ -689,7 +689,7 @@ void matrix_print(matrix_t *mat)
         for (j = 0; j < mat->ncols; ++j)
         {
             //mpq_out_str(stdout, 10, mat->data[i][j]);
-            printf("%lf ", (mat->data[i][j]));
+            printf("%.20le ", (mat->data[i][j]));
         }
         printf("\n");
     }

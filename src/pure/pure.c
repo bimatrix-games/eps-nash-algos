@@ -4,62 +4,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include "../utils/matrix.h"
-
-int m, n;
-matrix_t *R, *C;
-
-/* Read bimatrix from file using gambit file format */
-void read_from_file(FILE *f) 
-{
-	char *buf = (char *) malloc(100 * sizeof(char));
-	char c;
-	int i, j, tmpn;
-	size_t num_bytes = 100;
-	double a, b;
-
-	/*
-	This checks if we are parsing the correct file type.
-	*/
-	fgets(buf,num_bytes,f);
-	if( strncmp(buf,"NFG 1 D",(size_t)7) != 0 ) {
-		fprintf(stderr,"NFG file corrupted, aborting\n");
-		exit(1);
-	}
-
-	/*
-	First we need to ignore all comments (and player names) from the .nfg file.
-	*/
-
-	tmpn = 0;
-	while(tmpn < 2) { 
-		c = fgetc(f);
-		if( c == '\"' )
-			tmpn++;
-	}
-	tmpn = 0;
-	while(tmpn < 2) {
-		c = fgetc(f);
-		if( c == '{' || c == '}')
-			tmpn++;
-	}
-
-	fscanf(f,"%d %d", &m, &n);
-
-	R = matrix_alloc(m, n);
-	C = matrix_alloc(m, n);
-
-	fgetc(f); fgetc(f);
-
-	for(i = 0; i < n; i++) {
-		for(j = 0; j < m; j++) {
-			fscanf(f,"%lf %lf ", &a, &b);
-            R->data[j][i] = a;
-            C->data[j][i] = b;
-		}
-	}
-	free(buf);
-}
+#include "../utils/io.h"
 
 /* Compute the regret when using strategies x, y */
 double check_eps(matrix_t *R, matrix_t *C, int x, int y)
@@ -68,10 +13,10 @@ double check_eps(matrix_t *R, matrix_t *C, int x, int y)
     double tmp;
 
     tmp = 0;
-    for (i = 0; i < m; ++i)
+    for (i = 0; i < R->nrows; ++i)
         tmp = fmax(R->data[i][y] - R->data[x][y], tmp);
 
-    for (j = 0; j < n; ++j)
+    for (j = 0; j < R->ncols; ++j)
         tmp = fmax(C->data[x][j] - C->data[x][y], tmp);
     return tmp;
 }
@@ -84,10 +29,10 @@ double check_eps_pure(matrix_t *R, matrix_t *C, int *x, int *y)
     xp = 0; yp = 0;
     double eps = 1;
     double tmp;
-    for (i = 0; i < m; ++i){
+    for (i = 0; i < R->nrows; ++i){
         if (eps == 0)
             break;
-        for (j = 0; j < n; ++j) {
+        for (j = 0; j < R->ncols; ++j) {
             if (eps == 0)
                 break;
             tmp = check_eps(R, C, i, j);
@@ -111,7 +56,9 @@ double check_eps_pure(matrix_t *R, matrix_t *C, int *x, int *y)
 int main(int argc, char **argv)
 {
 	char c;
+    int m, n;
 	FILE *input;
+    matrix_t **bimatrix;
 	
 	while((c = getopt(argc, argv,"i:s:k:")) != -1){
 		switch(c) {
@@ -126,14 +73,10 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	read_from_file(input);
+	bimatrix = read_bimatrix_from_file(input, &m, &n);
 
-    matrix_t *A = matrix_norm(R);
-    matrix_t *B = matrix_norm(C);
-    matrix_free(R);
-    matrix_free(C);
-    R = A;
-    C = B;
+    matrix_t *R = matrix_norm(bimatrix[0]);
+    matrix_t *C = matrix_norm(bimatrix[1]);
 
     int x, y;
     check_eps_pure(R, C, &x, &y);
@@ -141,6 +84,7 @@ int main(int argc, char **argv)
     printf("s= 2 %d 1 %d 1\n", x + 1, y + 1 + m);
 
 	fclose(input);
+    free_matrices(bimatrix);
     matrix_free(R);
     matrix_free(C);
 	
