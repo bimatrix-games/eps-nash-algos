@@ -9,7 +9,7 @@ CPLEXLDFLAGS=-lcplex -lpthread
 LDDIR=-L$(CPLEXLIB) -L$(HOME)/local/lib
 LDFLAGS=$(CPLEXLDFLAGS) -lgmp -lm -lrt -lpthread
 
-OBJ= cplp.o matrix.o 
+OBJ= cplp.o matrix.o io.o
 
 %.o : %.c
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
