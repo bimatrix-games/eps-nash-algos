@@ -217,8 +217,6 @@ cplp_t *form_steepest_lp(matrix_t *A, matrix_t *B, matrix_t *Bt, matrix_t *x, ma
     lp_t->obj_sense = CPX_MIN;
     lp_t->sense[lp_t->nrows - 1] = 'E';
     lp_t->sense[lp_t->nrows - 2] = 'E';
-    //lp_t->lb[Ap->ncols - 3] = -CPX_INFBOUND;
-    //lp_t->lb[Ap->ncols - 2] = -CPX_INFBOUND;
     lp_t->lb[Ap->ncols - 1] = -CPX_INFBOUND;
 
     matrix_free(Ap);
