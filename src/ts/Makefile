@@ -10,8 +10,8 @@ LDDIR=-L$(CPLEXLIB) -L$(HOME)/local/lib
 LDFLAGS=$(CPLEXLDFLAGS) -lgmp -lm -lrt -lpthread
 
 UTILS_DIR=../utils
-UTILS_OBJ=$(UTILS_DIR)/cplp.o $(UTILS_DIR)/matrix.o $(UTILS_DIR)/io.o 
-OBJ=ts.o main.o util.o
+UTILS_OBJ=$(UTILS_DIR)/cplp.o $(UTILS_DIR)/matrix.o $(UTILS_DIR)/io.o $(UTILS_DIR)/util.o 
+OBJ=ts.o main.o
 
 %.o : %.c
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@

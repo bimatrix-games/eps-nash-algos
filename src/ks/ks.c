@@ -1,7 +1,7 @@
 #include <math.h>
 #include <float.h>
 #include "ks.h"
-#include "util.h"
+#include "../utils/util.h"
 
 /* Form LP representing zero-sum game (D, -D) */
 cplp_t *form_cplp(matrix_t *D)

@@ -1,6 +1,7 @@
 #include <math.h>
 #include "checker.h"
 #include "lis.h"
+#include "../utils/util.h"
 
 matrix_t *R;
 matrix_t *C;
@@ -8,121 +9,6 @@ matrix_t *x;
 matrix_t *y;
 matrix_t *supp_x;
 matrix_t *supp_y;
-
-/* 
- * Computes the best response given a payoff matrix 'mat' and the opponents
- * strategy.
- */
-double best_response(matrix_t *mat, matrix_t *s)
-{
-    double payoff;
-    matrix_t *mat_s = matrix_mul(mat, s);
-    
-    payoff = mat_s->data[0][0];
-    int i, j;
-    for (i = 0; i < mat_s->nrows; ++i)
-    {
-        for (j = 0; j < mat_s->ncols; ++j)
-        {
-            if (payoff < mat_s->data[i][j])
-                payoff = mat_s->data[i][j];
-        }
-    }
-
-    matrix_free(mat_s);
-    return payoff;
-}
-
-/* 
- * Returns the expected payoff given the payoff matrix and the mixed strategies
- * of both players.
- */
-double get_payoff(matrix_t *mat, matrix_t *x, matrix_t *y)
-{
-    matrix_t *x_t = matrix_trans(x);
-    matrix_t *x_mat = matrix_mul(x_t, mat);
-    matrix_t *x_mat_y = matrix_mul(x_mat, y);
-
-    double payoff;
-    payoff = x_mat_y->data[0][0];
-
-    matrix_free(x_t);
-    matrix_free(x_mat);
-    matrix_free(x_mat_y);
-
-    return payoff;
-}
-
-/* Computes and returns the epsilon-NE for the current values of x and y */
-double compute_epsilon()
-{
-    double u, v, u1, v1, eps1, eps2, eps;
-    
-    eps1 = eps2 = 0;
-    u = get_payoff(R, x, y);
-    v = get_payoff(C, x, y);
-    u1 = best_response(R, y);
-    matrix_t *Ct = matrix_trans(C);
-    v1 = best_response(Ct, x);
-    
-    if (u < u1)
-        eps1 = u1 - u;
-    
-    if (v < v1)
-        eps2 = v1 - v;
-    
-    if (eps1 > eps2)
-        eps = eps1;
-    else
-        eps = eps2;
-    
-    return eps;
-}
-
-/* Computes and returns the epsilon-WSNE for the current values of x and y */
-double compute_epsilon_supp(double *eps1, double *eps2)
-{
-    double u, v, u1, v1, e1, e2;
-    e1 = e2 = 0;
-    
-    u1 = best_response(R, y);
-    matrix_t *Ct = matrix_trans(C);
-    v1 = best_response(Ct, x);
-
-    matrix_t *Ry = matrix_mul(R, y);
-    matrix_t *xt = matrix_trans(x);
-    matrix_t *xtC = matrix_mul(xt, C);
-
-    int i;
-    for (i = 0; i < x->nrows; ++i)
-    {
-        if (x->data[i][0] > 0) {
-            u = u1 - Ry->data[i][0];
-            if (u > e1)
-                e1 = u;
-        }
-    }
-
-    for (i = 0; i < y->nrows; ++i)
-    {
-        if (y->data[i][0] > 0){
-            v = v1 - xtC->data[0][i];
-            if (v > e2)
-                e2 = v;
-        }
-    }
-
-    if (eps1 != NULL)
-        *eps1 = e1;
-    if (eps2 != NULL)
-        *eps2 = e2;
-
-    matrix_free(Ry);
-    matrix_free(xt);
-    matrix_free(xtC);
-    matrix_free(Ct);
-    return fmax(e1, e2);
-}
 
 /* Form the linear system given a players payoff matrix */
 matrix_t** form_lis(matrix_t *A)
@@ -270,7 +156,7 @@ int is_nash_support()
 
     if(!err){
         y = supp_to_sol(supp_y, yp);
-        double eps = compute_epsilon();
+        double eps = compute_epsilon(R, C, x, y, NULL, NULL);
         if (eps < -eps_err || eps > eps_err)
             err = 1;
     }

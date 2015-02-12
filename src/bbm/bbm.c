@@ -68,15 +68,16 @@ bbm_sol_t bbm_solve_1(matrix_t *R, matrix_t *C, matrix_t *D)
     matrix_t *y = lp_sol.y;
     double g1, g2;
 
-    bbm_extra_t *ext = bbm_extra_alloc(R, C, x, y);
-    double eps = compute_epsilon(ext, &g1, &g2);
+    matrix_t *Ct = matrix_trans(C);
+    extra_t *ext = extra_alloc(R, C, Ct, x, y);
+    double eps = compute_epsilon_extra(ext, &g1, &g2);
 
     bbm_sol_t sol;
 
     if (eps <= (3 - sqrt(5)) / 2) {
         sol.x = x;
         sol.y = y;
-        bbm_extra_free(ext);
+        extra_free(ext);
         return sol;
     }
 
@@ -89,7 +90,7 @@ bbm_sol_t bbm_solve_1(matrix_t *R, matrix_t *C, matrix_t *D)
         r1->data[ext->br_R_y_index][0] = 1;
         sol.x = r1;
         int b;
-        matrix_t *r1t_C = matrix_mul_mat_vec(ext->Ct, r1);
+        matrix_t *r1t_C = matrix_mul_mat_vec(Ct, r1);
         best_response(r1t_C, &b);
         b2->data[b][0] = 1;
         matrix_t *delta_y = matrix_mul_const(y, (1 - delta));
@@ -115,7 +116,7 @@ bbm_sol_t bbm_solve_1(matrix_t *R, matrix_t *C, matrix_t *D)
         matrix_free(r1);
     }
 
-    bbm_extra_free(ext);
+    extra_free(ext);
     matrix_free(x);
     matrix_free(y);
     return sol;
@@ -149,7 +150,7 @@ double bbm_delta2(double g, double d1, double h)
  * Perform extra step of BBM2 for player p for bimatrix game (R, C) where x is player p's stratey
  * and y is the opponent's strategy.
  */
-bbm_sol_t bbm_s(matrix_t *R, matrix_t *C, bbm_extra_t *ext, matrix_t *x, matrix_t *y, double g, int p)
+bbm_sol_t bbm_s(matrix_t *R, matrix_t *C, matrix_t *Ct, extra_t *ext, matrix_t *x, matrix_t *y, double g, int p)
 {
     bbm_sol_t sol;
 
@@ -172,7 +173,7 @@ bbm_sol_t bbm_s(matrix_t *R, matrix_t *C, bbm_extra_t *ext, matrix_t *x, matrix_
     double h2;
     if (p == 0){
         int b;
-        matrix_t *r1t_C = matrix_mul_mat_vec(ext->Ct, sol.x);
+        matrix_t *r1t_C = matrix_mul_mat_vec(Ct, sol.x);
         best_response(r1t_C, &b);
         b2->data[b][0] = 1;
         tmp = matrix_mul_mat_vec(ext->xt_C, b2);
@@ -213,8 +214,9 @@ bbm_sol_t bbm_solve_2(matrix_t *R, matrix_t *C, matrix_t *D)
 
     double g1, g2;
 
-    bbm_extra_t *ext = bbm_extra_alloc(R, C, x, y);
-    double eps = compute_epsilon(ext, &g1, &g2);
+    matrix_t *Ct = matrix_trans(C);
+    extra_t *ext = extra_alloc(R, C, Ct, x, y);
+    double eps = compute_epsilon_extra(ext, &g1, &g2);
     double thresh = (double)1/3;
 
     if (eps <= thresh)
@@ -222,10 +224,10 @@ bbm_sol_t bbm_solve_2(matrix_t *R, matrix_t *C, matrix_t *D)
 
     bbm_sol_t sol;
     if (g1 >= g2) {
-        sol = bbm_s(R, C, ext, x, y, g1, 0);
+        sol = bbm_s(R, C, Ct, ext, x, y, g1, 0);
     }
     else {
-        sol = bbm_s(R, C, ext, y, x, g2, 1);
+        sol = bbm_s(R, C, Ct, ext, y, x, g2, 1);
         matrix_t *t = sol.x;
         sol.x = sol.y;
         sol.y = t;

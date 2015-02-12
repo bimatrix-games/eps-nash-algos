@@ -12,10 +12,10 @@ extern matrix_t *y;
 extern matrix_t *supp_x;
 extern matrix_t *supp_y;
 
-double best_response(matrix_t *mat, matrix_t *s);
-double get_payoff(matrix_t *mat, matrix_t *x, matrix_t *y);
-double compute_epsilon();
-double compute_epsilon_supp();
+//double best_response(matrix_t *mat, matrix_t *s);
+//double get_payoff(matrix_t *mat, matrix_t *x, matrix_t *y);
+//double compute_epsilon();
+//double compute_epsilon_supp();
 int is_nash_support();
 
 #endif

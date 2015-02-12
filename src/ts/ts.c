@@ -491,6 +491,7 @@ ts_sol_t solve_ts(matrix_t *A, matrix_t *B, matrix_t *Bt, matrix_t *x0, matrix_t
     matrix_t *x, *y;
     x = matrix_copy(x0);
     y = matrix_copy(y0);
+    double e = delta / (delta + 1);
     while (1) {
         count++;
         ext = extra_alloc(A, B, Bt, x, y);
@@ -515,7 +516,6 @@ ts_sol_t solve_ts(matrix_t *A, matrix_t *B, matrix_t *Bt, matrix_t *x0, matrix_t
         if (Df >= -delta)
             break;
 
-        double e = delta / (delta + 1);
         np = new_point(e, x, xp, y, yp);
         extra_free(ext);
         cplp_sol_free(steep.lp_sol);

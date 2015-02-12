@@ -2,7 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>
-#include "util.h"
+#include "../utils/util.h"
 
 /* Prints the solution to screen */
 void sol_print(sol_t sol)
