@@ -1,3 +1,6 @@
+---
+layout: index
+---
 ##Eps-Nash-Algos
 
 A collection of algorithms for approximation of Nash equilibrium. The algorithms
