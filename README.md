@@ -1,4 +1,4 @@
-##Eps-Nash-Algos
+## Eps-Nash-Algos
 
 A collection of algorithms for approximation of Nash equilibrium. The algorithms
 implemented are stated below with their theoretic upper bounds:
